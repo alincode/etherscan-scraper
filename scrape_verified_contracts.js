@@ -2,7 +2,6 @@ const axios = require('axios')
 const cheerio = require('cheerio')
 let start = 1
 let totalBlocks = 200
-let transactionPageEnd = 1
 let verfiedContractPageEnd = 1
 const totalTransactionsOnPage = 50
 let blockURL = 'https://etherscan.io/txs?block='
@@ -29,25 +28,29 @@ async function startApp () {
     mysql.insertIndexedBlock(i)
     await sleep(3000)
   }
-/*
+
   // loop through verified contracts page
   for (let y = start; y <= verfiedContractPageEnd; y++) {
     scrapeVerifiedContracts(y)
     await sleep(2000)
   }
   // check Transaction page every minute
-  checkTransactionsPage(1)
+  checkNewBlocks()
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
-  */
 }
 
-async function checkTransactionsPage (p) {
-  console.log('Rechecking Transactions page #', p)
-  scrapeBlockPage(1)
-  await sleep(10000)
-  p++
-  checkTransactionsPage(p)
+async function checkNewBlocks () {
+  console.log('Checking for new blocks...')
+  let currentBlock = await latestBlock()
+  let finalBlock = await mysql.lastBlockIndexed()
+  for (let i = currentBlock; i > finalBlock; i--) {
+    scrapeBlockPage(i)
+    mysql.insertIndexedBlock(i)
+    await sleep(3000)
+  }
+  await sleep(60000)
+  checkNewBlocks()
 }
 
 async function checkVerifiedContractsPage (p) {
@@ -65,7 +68,6 @@ function scrapeVerifiedContracts (page) {
       return parseVerifiedContractPage(response.data)
     })
     .catch(function (error) {
-    // handle error
       console.log(error)
     })
 }
