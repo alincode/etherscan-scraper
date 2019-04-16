@@ -2,7 +2,7 @@ const axios = require('axios')
 const cheerio = require('cheerio')
 let start = 1
 let totalBlocks = 200
-let verfiedContractPageEnd = 1
+let verfiedContractPageEnd = 40
 const totalTransactionsOnPage = 50
 let blockURL = 'https://etherscan.io/txs?block='
 let verifiedContractPage = 'https://etherscan.io/contractsVerified/'
@@ -50,13 +50,14 @@ async function checkNewBlocks () {
     await sleep(3000)
   }
   await sleep(60000)
+  console.log('Sleeping for 60 seconds...')
   checkNewBlocks()
 }
 
 async function checkVerifiedContractsPage (p) {
   console.log('Rechecking Verified Contract page #', p)
   scrapeVerifiedContracts(1)
-  await sleep(25000)
+  await sleep(1800000)
   p++
   checkVerifiedContractsPage(p)
 }
