@@ -33,8 +33,6 @@ async function startApp () {
     await sleep(3000)
   }
 
-  /*
-
   // loop through verified contracts page
   for (let y = start; y <= verfiedContractPageEnd; y++) {
     scrapeVerifiedContracts(y)
@@ -44,7 +42,6 @@ async function startApp () {
   checkNewBlocks()
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
-  */
 }
 
 async function checkNewBlocks () {
