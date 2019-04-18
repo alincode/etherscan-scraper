@@ -36,7 +36,7 @@ function parseVerifiedContract (data) {
   let $ = cheerio.load(data)
   contractObject.contractName = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div.row.align-items-center > div.col-7.col-lg-8 > span').text()
   contractObject.compilerVersion = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
-  contractObject.optimization = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text()
+  contractObject.optimization = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
   contractObject.sourceCode = $('pre.js-sourcecopyarea').text()
   if (data.indexOf('Constructor Arguments') > -1) {
     contractObject.constructorArguments = parseConstructorArguments($('#dividcode > div:nth-child(4) > pre').text())
@@ -47,6 +47,14 @@ function parseVerifiedContract (data) {
     // find library only verified contract
   }
   return contractObject
+}
+
+function parseOptimization (data) {
+  if (data === 'No') {
+    return false
+  } else {
+    return true
+  }
 }
 
 function parseConstructorArguments (data) {
