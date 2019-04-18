@@ -48,7 +48,7 @@ module.exports = {
   },
   checkAddresses: async () => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? LIMIT 2', [0, 0], (err, res) => {
+      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? LIMIT 1', [0, 0], (err, res) => {
         if (err) {
           reject(err)
         } else {
@@ -58,9 +58,9 @@ module.exports = {
     )
     return results
   },
-  updateAddresses: async (address, blockscout, verified, checked) => {
+  updateAddresses: async (address, blockscout, verified, checked, failed) => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('UPDATE addresses SET blockscout = ?, verified = ?, checked = ? WHERE address = ?', [blockscout, verified, checked, address], (err) => {
+      connection.query('UPDATE addresses SET blockscout = ?, verified = ?, checked = ?, failed = ? WHERE address = ?', [blockscout, verified, checked, failed, address], (err) => {
         if (err) {
           reject(err)
         } else {
