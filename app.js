@@ -1,4 +1,6 @@
 const axios = require('./resources/axios')
+const parser = require('./resources/parser')
+const blockscout = require('./resources/blockscout')
 const cheerio = require('cheerio')
 let start = 1
 let totalBlocks = 200
@@ -8,13 +10,12 @@ let blockURL = 'https://etherscan.io/txs?block='
 let verifiedContractPage = 'https://etherscan.io/contractsVerified/'
 
 let mysql = require('./resources/mysql')
-let etherscan = require('./resources/etherscan')
 
 startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
-  // importSourceCode()
+  importSourceCode()
 
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
@@ -167,8 +168,27 @@ function getBlockPages (data) {
 
 async function importSourceCode () {
   let addresses = await mysql.checkAddresses()
-  for (let i = 0; i < addresses.length; i++) {
-    console.log(addresses[i].address)
-    console.log(await etherscan.makeRequest(addresses[i].address))
+  if (addresses.length > 0) {
+    for (let i = 0; i < addresses.length; i++) {
+      let importAddress = addresses[i].address
+      // let importAddress = '0x3644ab79a793244abdbca44189a01756042db2e3'
+      let etherscanCodeURL = 'https://etherscan.io/address/' + importAddress + '#code'
+      let verifiedContract = await parser.parsePage(etherscanCodeURL)
+      if (verifiedContract) {
+        if (await blockscout.checkBlockScoutVerification(importAddress) === true) {
+          console.log('Contract ' + importAddress + ' already verified...')
+          // update DB to blockscout verified
+          mysql.updateAddresses(importAddress, 1, 1, 1, 0)
+        } else {
+          console.log('Contract ' + importAddress + ' not verified...')
+          let blockscoutImport = await blockscout.verifyContract(importAddress, verifiedContract)
+          console.log(blockscoutImport)
+        }
+      } else {
+        // mark contract as not verified on Etherscan
+        mysql.updateAddresses(importAddress, 0, 0, 1, 0)
+      }
+      console.log(importAddress)
+    }
   }
 }
