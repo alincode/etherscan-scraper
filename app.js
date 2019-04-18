@@ -1,22 +1,21 @@
 const axios = require('./resources/axios')
 const parser = require('./resources/parser')
+const mysql = require('./resources/mysql')
 const blockscout = require('./resources/blockscout')
 const cheerio = require('cheerio')
-let start = 1
-let totalBlocks = 200
-let verfiedContractPageEnd = 40
+const blockURL = 'https://etherscan.io/txs?block='
+const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
+const start = 1
+const totalBlocks = 200
+const verfiedContractPageEnd = 40
 const totalTransactionsOnPage = 50
-let blockURL = 'https://etherscan.io/txs?block='
-let verifiedContractPage = 'https://etherscan.io/contractsVerified/'
-
-let mysql = require('./resources/mysql')
 
 startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
   importSourceCode()
-
+/*
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
   let finalBlock = await mysql.lastBlockIndexed()
@@ -31,18 +30,19 @@ async function startApp () {
   for (let i = currentBlock; i > finalBlock; i--) {
     scrapeBlockPage(i)
     mysql.insertIndexedBlock(i)
-    await sleep(3000)
+    await sleep(1500)
   }
 
   // loop through verified contracts page
   for (let y = start; y <= verfiedContractPageEnd; y++) {
     scrapeVerifiedContracts(y)
-    await sleep(2000)
+    await sleep(1500)
   }
   // check Transaction page every minute
   checkNewBlocks()
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
+*/
 }
 
 async function checkNewBlocks () {
@@ -171,24 +171,31 @@ async function importSourceCode () {
   if (addresses.length > 0) {
     for (let i = 0; i < addresses.length; i++) {
       let importAddress = addresses[i].address
-      // let importAddress = '0x3644ab79a793244abdbca44189a01756042db2e3'
+      // let importAddress = '0xb033d7796effc334c0d5e30210ebc1a336422fa5'
       let etherscanCodeURL = 'https://etherscan.io/address/' + importAddress + '#code'
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
         if (await blockscout.checkBlockScoutVerification(importAddress) === true) {
           console.log('Contract ' + importAddress + ' already verified...')
-          // update DB to blockscout verified
+          // contract already verified - update DB to blockscout verified
           mysql.updateAddresses(importAddress, 1, 1, 1, 0)
         } else {
+          // start the import process in blockscout- then update the DB when successful
           console.log('Contract ' + importAddress + ' not verified...')
-          let blockscoutImport = await blockscout.verifyContract(importAddress, verifiedContract)
-          console.log(blockscoutImport)
+          let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract)
+          if (blockscoutImport === true) {
+            console.log(importAddress + ' has been successfully verified on BlockScout')
+            mysql.updateAddresses(importAddress, 1, 1, 1, 0)
+          } else {
+            console.log(importAddress + ' failed to be verified on BlockScout')
+            mysql.updateAddresses(importAddress, 0, 0, 1, 1)
+          }
         }
       } else {
         // mark contract as not verified on Etherscan
+        console.log(importAddress + ' not verified on Etherscan...')
         mysql.updateAddresses(importAddress, 0, 0, 1, 0)
       }
-      console.log(importAddress)
     }
   }
 }

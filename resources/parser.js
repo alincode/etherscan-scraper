@@ -37,12 +37,13 @@ function parseVerifiedContract (data) {
   contractObject.contractName = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div.row.align-items-center > div.col-7.col-lg-8 > span').text()
   contractObject.compilerVersion = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
   contractObject.optimization = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
+  contractObject.runs = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
   contractObject.sourceCode = $('pre.js-sourcecopyarea').text()
   if (data.indexOf('Constructor Arguments') > -1) {
     contractObject.constructorArguments = parseConstructorArguments($('#dividcode > div:nth-child(4) > pre').text())
   }
   if (data.indexOf('Constructor Arguments') > -1 && data.indexOf('Library Used') > -1) {
-    contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').text())
+    contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').html())
   } else if (data.indexOf('Library Used') > -1) {
     // find library only verified contract
   }
@@ -68,5 +69,29 @@ function parseConstructorArguments (data) {
 }
 
 function parseLibraries (data) {
-  return data
+  let libraries = []
+  if (data.indexOf('<br>') > -1) {
+    let splitLibraries = data.split('<br>')
+    for (let i = 0; i < splitLibraries.length; i++) {
+      let obj = {}
+      let splitNameAddress = splitLibraries[i].split(':')
+      obj.name = splitNameAddress[0].trim()
+      obj.address = extractAddress(splitNameAddress[1])
+      if (obj.name && obj.address) {
+        libraries.push(obj)
+      }
+    }
+  }
+  return libraries
+}
+
+function extractAddress (data) {
+  if (data) {
+    var re = new RegExp('href="/address/(.*?)">', 'i')
+    let address = data.match(re)[1]
+    if (address) {
+      return address
+    }
+  }
+  return false
 }

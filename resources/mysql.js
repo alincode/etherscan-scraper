@@ -48,7 +48,7 @@ module.exports = {
   },
   checkAddresses: async () => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? LIMIT 1', [0, 0], (err, res) => {
+      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? LIMIT 100', [0, 0], (err, res) => {
         if (err) {
           reject(err)
         } else {
