@@ -75,6 +75,8 @@ let self = module.exports = {
       if (status === true) {
         resolve(status)
       } else {
+        /*
+        wait for issue https://github.com/poanetwork/blockscout/issues/1786 to be fixed
         if (compiler === 'byzantium') {
           console.log('Failed but trying Constantinople EVM')
           await sleep(2000)
@@ -83,9 +85,9 @@ let self = module.exports = {
           await sleep(2000)
           console.log('Failed but trying Petersburg EVM')
           self.puppetVerify(address, data, 'petersburg')
-        } else {
-          resolve(false)
         }
+        */
+        resolve(false)
       }
     })
     return results
