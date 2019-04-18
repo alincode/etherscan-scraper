@@ -15,7 +15,7 @@ startApp()
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
   importSourceCode()
-/*
+
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
   let finalBlock = await mysql.lastBlockIndexed()
@@ -42,7 +42,6 @@ async function startApp () {
   checkNewBlocks()
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
-*/
 }
 
 async function checkNewBlocks () {
