@@ -71,7 +71,7 @@ async function scrapeVerifiedContracts (page) {
   console.log('Scraping Verified Contracts page ' + page + '...')
   let verifiedContractURL = verifiedContractPage + page
   let data = await axios.fetchPage(verifiedContractURL)
-  return data
+  return parseVerifiedContractPage(data)
 }
 
 async function scrapeBlockPage (block) {
