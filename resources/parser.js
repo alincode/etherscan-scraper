@@ -43,7 +43,7 @@ function parseVerifiedContract (data) {
     contractObject.constructorArguments = parseConstructorArguments($('#dividcode > div:nth-child(4) > pre').text())
   }
   if (data.indexOf('Constructor Arguments') > -1 && data.indexOf('Library Used') > -1) {
-    contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').text())
+    contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').html())
   } else if (data.indexOf('Library Used') > -1) {
     // find library only verified contract
   }
@@ -70,11 +70,28 @@ function parseConstructorArguments (data) {
 
 function parseLibraries (data) {
   let libraries = []
-  let split = data.split(':')
-  if (split.length > 0) {
-    for (let i = 1; i < split.length; i += 2) {
-      libraries.push(split[i].trim())
+  if (data.indexOf('<br>') > -1) {
+    let splitLibraries = data.split('<br>')
+    for (let i = 0; i < splitLibraries.length; i++) {
+      let obj = {}
+      let splitNameAddress = splitLibraries[i].split(':')
+      obj.name = splitNameAddress[0].trim()
+      obj.address = extractAddress(splitNameAddress[1])
+      if (obj.name && obj.address) {
+        libraries.push(obj)
+      }
     }
   }
   return libraries
+}
+
+function extractAddress (data) {
+  if (data) {
+    var re = new RegExp('href="/address/(.*?)">', 'i')
+    let address = data.match(re)[1]
+    if (address) {
+      return address
+    }
+  }
+  return false
 }
