@@ -14,7 +14,7 @@ startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
-  // await importSourceCode()
+  await importSourceCode()
 
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
