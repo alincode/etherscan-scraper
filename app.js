@@ -6,7 +6,7 @@ const cheerio = require('cheerio')
 const blockURL = 'https://etherscan.io/txs?block='
 const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
 const start = 1
-const totalBlocks = 200
+const startBlock = 7000000
 const verfiedContractPageEnd = 40
 const totalTransactionsOnPage = 50
 
@@ -14,23 +14,32 @@ startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
-  await importSourceCode()
+  // await importSourceCode()
 
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
   let finalBlock = await mysql.lastBlockIndexed()
   console.log('Last Block Indexed from DB: ', finalBlock)
+  // check startBlock
+  await mysql.checkStartBlock(startBlock)
+  console.log('Checking to see if the start block is indexed...')
+
   if (finalBlock === 0) {
     console.log('No blocks found indexed in DB')
-    finalBlock = currentBlock - totalBlocks
-    console.log('Indexing blocks ' + currentBlock + ' - ' + finalBlock)
-  }
-
-  // loop through transactions pages looking for verified contracts
-  for (let i = currentBlock; i > finalBlock; i--) {
-    scrapeBlockPage(i)
-    mysql.insertIndexedBlock(i)
-    await sleep(1500)
+  } else {
+    // check gaps
+    let blockGaps = await mysql.blockGaps()
+    console.log(blockGaps)
+    console.log('Checking block gaps...')
+    if (blockGaps.length > 0) {
+      for (let u = 0; u < blockGaps.length; u++) {
+        for (let p = blockGaps[u].gap_starts_at; p < blockGaps[u].gap_ends_at; p++) {
+          scrapeBlockPage(p)
+          mysql.insertIndexedBlock(p)
+          await sleep(1500)
+        }
+      }
+    }
   }
 
   // loop through verified contracts page
