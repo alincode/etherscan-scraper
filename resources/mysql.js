@@ -69,5 +69,36 @@ module.exports = {
       })
     )
     return results
+  },
+  checkStartBlock: async (start) => {
+    let results = await new Promise((resolve, reject) => {
+      connection.query('SELECT * FROM blocks ORDER BY block ASC', (err, results) => {
+        if (err) {
+          console.log(err)
+        }
+        if (results[0].block === start) {
+          resolve(true)
+        } else {
+          connection.query('INSERT INTO blocks (block) VALUES (?)', [start], (error) => {
+            if (error) {
+              console.log(error)
+            }
+            resolve(true)
+          })
+        }
+      })
+    })
+    return results
+  },
+  blockGaps: async () => {
+    let results = await new Promise((resolve, reject) => {
+      connection.query('SELECT (t1.block + 1) as gap_starts_at, (SELECT MIN(t3.block) -1 FROM blocks t3 WHERE t3.block > t1.block) as gap_ends_at FROM blocks t1 WHERE NOT EXISTS (SELECT t2.block FROM blocks t2 WHERE t2.block = t1.block + 1) HAVING gap_ends_at IS NOT NULL', (err, res) => {
+        if (err) {
+          console.log(err)
+        }
+        resolve(res)
+      })
+    })
+    return results
   }
 }
