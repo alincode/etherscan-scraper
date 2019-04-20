@@ -7,8 +7,12 @@ let self = module.exports = {
       try {
         let url = 'https://blockscout.com/eth/mainnet/address/' + address + '/contracts'
         let data = await axios.fetchPage(url)
-        let res = isVerified(data)
-        resolve(res)
+        if (data === false) {
+          resolve(404)
+        } else {
+          let res = isVerified(data)
+          resolve(res)
+        }
       } catch (error) {
         reject(error)
       }
@@ -88,6 +92,10 @@ let self = module.exports = {
         }
         */
         resolve(false)
+      }
+    }).catch((error) => {
+      if (error) {
+        console.log(error)
       }
     })
     return results
