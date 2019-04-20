@@ -14,7 +14,7 @@ startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
-  importSourceCode()
+  await importSourceCode()
 
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
@@ -170,14 +170,19 @@ async function importSourceCode () {
   if (addresses.length > 0) {
     for (let i = 0; i < addresses.length; i++) {
       let importAddress = addresses[i].address
+      console.log(importAddress)
       // let importAddress = '0xb033d7796effc334c0d5e30210ebc1a336422fa5'
       let etherscanCodeURL = 'https://etherscan.io/address/' + importAddress + '#code'
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
-        if (await blockscout.checkBlockScoutVerification(importAddress) === true) {
+        let checkBlockScout = await blockscout.checkBlockScoutVerification(importAddress)
+        if (checkBlockScout === true) {
           console.log('Contract ' + importAddress + ' already verified...')
           // contract already verified - update DB to blockscout verified
           mysql.updateAddresses(importAddress, 1, 1, 1, 0)
+        } else if (checkBlockScout === 404) {
+          console.log('BlockScout reported a 404 error...')
+          mysql.updateAddresses(importAddress, 0, 0, 1, 1)
         } else {
           // start the import process in blockscout- then update the DB when successful
           console.log('Contract ' + importAddress + ' not verified...')
