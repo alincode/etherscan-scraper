@@ -167,7 +167,7 @@ async function latestBlock () {
 }
 
 function getBlockPages (data) {
-  var re = new RegExp('A total of(.*?)transactions found', 'i')
+  var re = new RegExp('A total of(.*?)transaction', 'i')
   let total = data.match(re)[1]
   if (total) {
     return parseInt(total.trim())
