@@ -1,11 +1,13 @@
 const axios = require('./axios')
 const cheerio = require('cheerio')
+const proxy = require('./proxies')
 
 module.exports = {
   parsePage: async (url) => {
     let results = await new Promise(async (resolve, reject) => {
       try {
-        let data = await axios.fetchPage(url)
+        let host = proxy.generateProxy()
+        let data = await axios.fetchPage(url, host)
         if (contractVerified(data)) {
           // we know the contract is verified, let's get the source code, name, solidity version, optimization, constructors and libraries
           let object = parseVerifiedContract(data)

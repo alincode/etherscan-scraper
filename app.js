@@ -1,6 +1,7 @@
 const axios = require('./resources/axios')
 const parser = require('./resources/parser')
 const mysql = require('./resources/mysql')
+const proxy = require('./resources/proxies')
 const blockscout = require('./resources/blockscout')
 const cheerio = require('cheerio')
 const blockURL = 'https://etherscan.io/txs?block='
@@ -77,15 +78,17 @@ async function checkVerifiedContractsPage (p) {
 
 async function scrapeVerifiedContracts (page) {
   console.log('Scraping Verified Contracts page ' + page + '...')
+  let host = proxy.generateProxy()
   let verifiedContractURL = verifiedContractPage + page
-  let data = await axios.fetchPage(verifiedContractURL)
+  let data = await axios.fetchPage(verifiedContractURL, host)
   return parseVerifiedContractPage(data)
 }
 
 async function scrapeBlockPage (block) {
   console.log('Scraping Page 1 of Block #' + block + '...')
+  let host = proxy.generateProxy()
   let blockPageURL = blockURL + block
-  let data = await axios.fetchPage(blockPageURL)
+  let data = await axios.fetchPage(blockPageURL, host)
   let totalTransactions = getBlockPages(data)
   let totalpages = Math.ceil(totalTransactions / totalTransactionsOnPage)
   parseTransactionsTable(data)
@@ -94,7 +97,7 @@ async function scrapeBlockPage (block) {
       await sleep(1000)
       console.log('Scraping Page ' + i + ' of Block #' + block + '...')
       let blockPagePaginated = blockURL + block + '&p=' + i
-      let paginatedData = await axios.fetchPage(blockPagePaginated)
+      let paginatedData = await axios.fetchPage(blockPagePaginated, host)
       parseTransactionsTable(paginatedData)
     }
   }
@@ -161,8 +164,9 @@ async function sleep (millis) {
 
 async function latestBlock () {
   // fetch latest block from etherscan
+  let host = proxy.generateProxy()
   let esLastBlockURL = 'https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken'
-  let block = await axios.fetchPage(esLastBlockURL)
+  let block = await axios.fetchPage(esLastBlockURL, host)
   return parseInt(block.result, 16)
 }
 
