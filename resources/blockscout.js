@@ -1,12 +1,14 @@
 const puppeteer = require('puppeteer')
 const axios = require('./axios')
+const proxy = require('./proxies')
 
 let self = module.exports = {
   checkBlockScoutVerification: async (address) => {
     let results = await new Promise(async (resolve, reject) => {
       try {
         let url = 'https://blockscout.com/eth/mainnet/address/' + address + '/contracts'
-        let data = await axios.fetchPage(url)
+        let host = proxy.generateProxy()
+        let data = await axios.fetchPage(url, host)
         if (data === false) {
           resolve(404)
         } else {
