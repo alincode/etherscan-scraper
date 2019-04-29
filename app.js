@@ -66,8 +66,8 @@ async function checkNewBlocks () {
     mysql.insertIndexedBlock(i)
     await sleep(1500)
   }
-  await sleep(60000)
   console.log('Sleeping for 60 seconds...')
+  await sleep(60000)
   checkNewBlocks()
 }
 
@@ -192,7 +192,6 @@ async function importSourceCode (repeat = false) {
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
         let checkBlockScout = await blockscout.checkBlockScoutVerification(importAddress)
-        console.log('Check BlockScout:', checkBlockScout)
         if (checkBlockScout === true) {
           console.log('Contract ' + importAddress + ' already verified...')
           // contract already verified - update DB to blockscout verified
@@ -202,7 +201,7 @@ async function importSourceCode (repeat = false) {
           mysql.updateAddresses(importAddress, 0, 0, 1, 1)
         } else {
         // start the import process in blockscout- then update the DB when successful
-          console.log('Contract ' + importAddress + ' not verified...')
+          console.log('Contract ' + importAddress + ' not verified on BlockScout, verifying...')
           let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract)
           if (blockscoutImport === true) {
             console.log(importAddress + ' has been successfully verified on BlockScout')
