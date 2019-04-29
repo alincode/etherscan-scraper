@@ -7,7 +7,8 @@ const cheerio = require('cheerio')
 const blockURL = 'https://etherscan.io/txs?block='
 const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
 const start = 1
-const startBlock = 7581067
+const startBlock = 7650153
+
 const verfiedContractPageEnd = 40
 const totalTransactionsOnPage = 50
 
@@ -53,7 +54,7 @@ async function startApp () {
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
   // check pending addresses for verified accounts
-  importSourceCode()
+  importSourceCode(true)
 }
 
 async function checkNewBlocks () {
@@ -180,7 +181,7 @@ function getBlockPages (data) {
   }
 }
 
-async function importSourceCode () {
+async function importSourceCode (repeat = false) {
   let addresses = await mysql.checkAddresses()
   if (addresses.length > 0) {
     for (let i = 0; i < addresses.length; i++) {
@@ -191,6 +192,7 @@ async function importSourceCode () {
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
         let checkBlockScout = await blockscout.checkBlockScoutVerification(importAddress)
+        console.log('Check BlockScout:', checkBlockScout)
         if (checkBlockScout === true) {
           console.log('Contract ' + importAddress + ' already verified...')
           // contract already verified - update DB to blockscout verified
@@ -216,5 +218,11 @@ async function importSourceCode () {
         mysql.updateAddresses(importAddress, 0, 0, 1, 0)
       }
     }
+  }
+
+  if (repeat === true) {
+    sleep(20000)
+    console.log('Rechecking address list backlog...')
+    importSourceCode(true)
   }
 }
