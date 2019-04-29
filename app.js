@@ -7,7 +7,8 @@ const cheerio = require('cheerio')
 const blockURL = 'https://etherscan.io/txs?block='
 const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
 const start = 1
-const startBlock = 7000000
+const startBlock = 7650153
+
 const verfiedContractPageEnd = 40
 const totalTransactionsOnPage = 50
 
@@ -34,7 +35,7 @@ async function startApp () {
     console.log('Checking block gaps...')
     if (blockGaps.length > 0) {
       for (let u = 0; u < blockGaps.length; u++) {
-        for (let p = blockGaps[u].gap_starts_at; p < blockGaps[u].gap_ends_at; p++) {
+        for (let p = blockGaps[u].gap_starts_at; p <= blockGaps[u].gap_ends_at; p++) {
           scrapeBlockPage(p)
           mysql.insertIndexedBlock(p)
           await sleep(1500)
@@ -42,16 +43,18 @@ async function startApp () {
       }
     }
   }
-
   // loop through verified contracts page
   for (let y = start; y <= verfiedContractPageEnd; y++) {
     scrapeVerifiedContracts(y)
     await sleep(1500)
   }
+
   // check Transaction page every minute
   checkNewBlocks()
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
+  // check pending addresses for verified accounts
+  importSourceCode(true)
 }
 
 async function checkNewBlocks () {
@@ -61,7 +64,7 @@ async function checkNewBlocks () {
   for (let i = currentBlock; i > finalBlock; i--) {
     scrapeBlockPage(i)
     mysql.insertIndexedBlock(i)
-    await sleep(3000)
+    await sleep(1500)
   }
   await sleep(60000)
   console.log('Sleeping for 60 seconds...')
@@ -166,7 +169,7 @@ async function latestBlock () {
   // fetch latest block from etherscan
   let host = proxy.generateProxy()
   let esLastBlockURL = 'https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken'
-  let block = await axios.fetchPage(esLastBlockURL, host)
+  let block = JSON.parse(await axios.fetchPage(esLastBlockURL, host))
   return parseInt(block.result, 16)
 }
 
@@ -178,7 +181,7 @@ function getBlockPages (data) {
   }
 }
 
-async function importSourceCode () {
+async function importSourceCode (repeat = false) {
   let addresses = await mysql.checkAddresses()
   if (addresses.length > 0) {
     for (let i = 0; i < addresses.length; i++) {
@@ -189,6 +192,7 @@ async function importSourceCode () {
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
         let checkBlockScout = await blockscout.checkBlockScoutVerification(importAddress)
+        console.log('Check BlockScout:', checkBlockScout)
         if (checkBlockScout === true) {
           console.log('Contract ' + importAddress + ' already verified...')
           // contract already verified - update DB to blockscout verified
@@ -197,7 +201,7 @@ async function importSourceCode () {
           console.log('BlockScout reported a 404 error...')
           mysql.updateAddresses(importAddress, 0, 0, 1, 1)
         } else {
-          // start the import process in blockscout- then update the DB when successful
+        // start the import process in blockscout- then update the DB when successful
           console.log('Contract ' + importAddress + ' not verified...')
           let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract)
           if (blockscoutImport === true) {
@@ -209,10 +213,16 @@ async function importSourceCode () {
           }
         }
       } else {
-        // mark contract as not verified on Etherscan
+      // mark contract as not verified on Etherscan
         console.log(importAddress + ' not verified on Etherscan...')
         mysql.updateAddresses(importAddress, 0, 0, 1, 0)
       }
     }
+  }
+
+  if (repeat === true) {
+    sleep(20000)
+    console.log('Rechecking address list backlog...')
+    importSourceCode(true)
   }
 }

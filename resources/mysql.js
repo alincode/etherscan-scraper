@@ -48,7 +48,7 @@ module.exports = {
   },
   checkAddresses: async () => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? LIMIT 100', [0, 0], (err, res) => {
+      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? AND id > ? ORDER BY id ASC LIMIT 100', [0, 0, 0], (err, res) => {
         if (err) {
           reject(err)
         } else {
@@ -97,6 +97,19 @@ module.exports = {
           console.log(err)
         }
         resolve(res)
+      })
+    })
+    return results
+  },
+  storeSource: async (address, contract) => {
+    let results = await new Promise((resolve, reject) => {
+      connection.query('UPDATE addresses SET name = ?, compiler = ?, optimization = ?, runs = ?, source = ?, constructor = ?, libraries = ?, bytecode = ? WHERE address = ?', [contract.contractName, contract.compilerVersion, contract.optimization, contract.runs, contract.sourceCode, contract.constructorArguments, contract.libraries, contract.bytecode, address], (err, res) => {
+        if (err) {
+          console.log(err)
+          reject(err)
+        } else {
+          resolve(true)
+        }
       })
     })
     return results
