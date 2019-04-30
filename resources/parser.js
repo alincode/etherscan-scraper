@@ -41,8 +41,14 @@ function parseVerifiedContract (data) {
   contractObject.optimization = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
   contractObject.runs = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
   contractObject.sourceCode = $('pre.js-sourcecopyarea').text()
+  contractObject.bytecode = $('#verifiedbytecode2').text()
   if (data.indexOf('Constructor Arguments') > -1) {
     contractObject.constructorArguments = parseConstructorArguments($('#dividcode > div:nth-child(4) > pre').text())
+  } else {
+    let checkBytecode = parseConstructorFromBytecode(contractObject.bytecode)
+    if (checkBytecode) {
+      contractObject.constructorArguments = checkBytecode
+    }
   }
   if (data.indexOf('Constructor Arguments') > -1 && data.indexOf('Library Used') > -1) {
     contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').html())
@@ -50,6 +56,15 @@ function parseVerifiedContract (data) {
     // find library only verified contract
   }
   return contractObject
+}
+
+function parseConstructorFromBytecode (data) {
+  let split = data.split('0029')
+  if (split.length > 1) {
+    return split[split.length - 1]
+  } else {
+    return false
+  }
 }
 
 function parseOptimization (data) {
