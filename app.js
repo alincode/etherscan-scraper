@@ -3,6 +3,7 @@ const parser = require('./resources/parser')
 const mysql = require('./resources/mysql')
 const proxy = require('./resources/proxies')
 const blockscout = require('./resources/blockscout')
+const colors = require('colors')
 const cheerio = require('cheerio')
 const blockURL = 'https://etherscan.io/txs?block='
 const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
@@ -66,14 +67,15 @@ async function checkNewBlocks () {
     mysql.insertIndexedBlock(i)
     await sleep(1500)
   }
+  console.log(colors.blue('Sleeping for 60 seconds...'))
   await sleep(60000)
-  console.log('Sleeping for 60 seconds...')
   checkNewBlocks()
 }
 
 async function checkVerifiedContractsPage (p) {
   console.log('Rechecking Verified Contract page #', p)
   scrapeVerifiedContracts(1)
+  console.log(colors.blue('Sleeping for an hour and then rechecking smart contract page...'))
   await sleep(1800000)
   p++
   checkVerifiedContractsPage(p)
@@ -192,7 +194,6 @@ async function importSourceCode (repeat = false) {
       let verifiedContract = await parser.parsePage(etherscanCodeURL)
       if (verifiedContract) {
         let checkBlockScout = await blockscout.checkBlockScoutVerification(importAddress)
-        console.log('Check BlockScout:', checkBlockScout)
         if (checkBlockScout === true) {
           console.log('Contract ' + importAddress + ' already verified...')
           // contract already verified - update DB to blockscout verified
@@ -202,13 +203,13 @@ async function importSourceCode (repeat = false) {
           mysql.updateAddresses(importAddress, 0, 0, 1, 1)
         } else {
         // start the import process in blockscout- then update the DB when successful
-          console.log('Contract ' + importAddress + ' not verified...')
+          console.log('Contract ' + importAddress + ' not verified on BlockScout, verifying...')
           let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract)
           if (blockscoutImport === true) {
-            console.log(importAddress + ' has been successfully verified on BlockScout')
+            console.log(colors.green(importAddress + ' has been successfully verified on BlockScout'))
             mysql.updateAddresses(importAddress, 1, 1, 1, 0)
           } else {
-            console.log(importAddress + ' failed to be verified on BlockScout')
+            console.log(colors.red(importAddress + ' failed to be verified on BlockScout'))
             mysql.updateAddresses(importAddress, 0, 0, 1, 1)
           }
         }
@@ -221,8 +222,8 @@ async function importSourceCode (repeat = false) {
   }
 
   if (repeat === true) {
-    sleep(20000)
-    console.log('Rechecking address list backlog...')
+    await sleep(30000)
+    console.log(colors.blue('Rechecking address list backlog...'))
     importSourceCode(true)
   }
 }
