@@ -1,7 +1,7 @@
 var connection = require('./database')
 
-module.exports = {
-  insertAddress: async (address) => {
+let self = module.exports = {
+  insertAddress: async (address, isVerified) => {
     let results = await new Promise((resolve, reject) =>
       connection.query('SELECT * from addresses WHERE address = ?', [address], (err, res) => {
         if (err) {
@@ -11,6 +11,10 @@ module.exports = {
             if (address) {
               console.log('Inserting ' + address + ' into the DB...')
               connection.query('INSERT INTO addresses (address) VALUES (?)', [address])
+            }
+          } else {
+            if (isVerified === true && res[0].blockscout === 0 && res[0].failed === 0) {
+              self.updateAddresses(res[0].address, 0, 0, 0, 0)
             }
           }
         }
@@ -48,7 +52,7 @@ module.exports = {
   },
   checkAddresses: async () => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? AND id > ? ORDER BY id ASC LIMIT 100', [0, 0, 0], (err, res) => {
+      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? AND id > ? ORDER BY id ASC LIMIT 1000', [0, 0, 0], (err, res) => {
         if (err) {
           reject(err)
         } else {

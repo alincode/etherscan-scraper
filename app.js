@@ -121,7 +121,7 @@ function parseVerifiedContractPage (data) {
       }
     }
   })
-  storeAddresses(addressArray)
+  storeAddresses(addressArray, true)
 }
 
 function parseTransactionsTable (data) {
@@ -140,10 +140,10 @@ function parseTransactionsTable (data) {
   storeAddresses(addressArray)
 }
 
-function storeAddresses (addresses) {
+function storeAddresses (addresses, isVerifiedPage = false) {
   let data = removeDuplicates(addresses)
   data.forEach(function (val) {
-    mysql.insertAddress(val)
+    mysql.insertAddress(val, isVerifiedPage)
   })
 }
 
