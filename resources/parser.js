@@ -25,7 +25,7 @@ module.exports = {
 
 function contractVerified (data) {
   let $ = cheerio.load(data)
-  let verified = $('#ContentPlaceHolder1_contractCodeDiv > h3 > strong').text()
+  let verified = $('#ContentPlaceHolder1_contractCodeDiv > div.row.py-1 > div > h3 > strong').text()
   if (verified.indexOf('Contract Source Code Verified') > -1) {
     return true
   } else {
