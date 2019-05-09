@@ -38,8 +38,10 @@ function parseVerifiedContract (data) {
   let $ = cheerio.load(data)
   contractObject.contractName = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div.row.align-items-center > div.col-7.col-lg-8 > span').text()
   contractObject.compilerVersion = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
-  contractObject.optimization = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
-  contractObject.runs = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
+  let opt = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
+  contractObject.optimization = opt.optimization
+  contractObject.runs = opt.runs
+  contractObject.evmVersion = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
   contractObject.sourceCode = $('pre.js-sourcecopyarea').text()
   contractObject.bytecode = $('#verifiedbytecode2').text()
   if (data.indexOf('Constructor Arguments') > -1) {
@@ -68,11 +70,18 @@ function parseConstructorFromBytecode (data) {
 }
 
 function parseOptimization (data) {
-  if (data === 'No') {
-    return false
+  let obj = {}
+  let split = data.split('with')
+  let runs = split[1].split(' ')
+  
+  if (split[0].trim() === 'No') {
+    obj.optimization = false
   } else {
-    return true
+    obj.optimization = true
   }
+  obj.runs = runs[1].trim()
+
+  return obj
 }
 
 function parseConstructorArguments (data) {
