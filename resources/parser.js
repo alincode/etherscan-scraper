@@ -62,8 +62,12 @@ function parseVerifiedContract (data) {
 }
 
 function parseSourceCode (data) {
-  let split = data.split('(UTC) */')
-  return split[1].trimLeft()
+  if (data.indexOf('(UTC) */') > -1) {
+    let split = data.split('(UTC) */')
+    return split[1].trimLeft()
+  } else {
+    return data
+  }
 }
 
 function parseConstructorFromBytecode (data) {
