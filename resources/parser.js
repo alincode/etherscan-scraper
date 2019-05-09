@@ -81,16 +81,20 @@ function parseConstructorFromBytecode (data) {
 
 function parseOptimization (data) {
   let obj = {}
-  let split = data.split('with')
-  let runs = split[1].split(' ')
-  
-  if (split[0].trim() === 'No') {
-    obj.optimization = false
-  } else {
-    obj.optimization = true
-  }
-  obj.runs = runs[1].trim()
+  if (data.indexOf('with') > -1) {
+    let split = data.split('with')
+    let runs = split[1].split(' ')
 
+    if (split[0].trim() === 'No') {
+      obj.optimization = false
+    } else {
+      obj.optimization = true
+    }
+    obj.runs = runs[1].trim()
+  } else {
+    obj.optimization = false
+    obj.runs = 200
+  }
   return obj
 }
 
