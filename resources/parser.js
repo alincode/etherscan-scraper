@@ -38,6 +38,9 @@ function parseVerifiedContract (data) {
   let $ = cheerio.load(data)
   contractObject.contractName = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div.row.align-items-center > div.col-7.col-lg-8 > span').text()
   contractObject.compilerVersion = $('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(1) > div:nth-child(3) > div.col-7.col-lg-8 > span').text()
+  if (contractObject.compilerVersion.indexOf('vyper') > -1) {
+    return false
+  }
   let opt = parseOptimization($('#ContentPlaceHolder1_contractCodeDiv > div.row.mx-gutters-lg-1.mb-5 > div:nth-child(2) > div:nth-child(1) > div.col-7.col-lg-8 > span').text())
   contractObject.optimization = opt.optimization
   contractObject.runs = opt.runs
