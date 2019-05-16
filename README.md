@@ -1,3 +1,8 @@
+# Verified Contract Stats
+| Verified      | Failed    | Total Contracts Checked  |
+| ------------- |:---------:| ------------------------:|
+| 40,502        | 17,058    | 142,758                  |
+
 # Etherscan Contract Scraper
 
 ## Project Goals
