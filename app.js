@@ -17,8 +17,7 @@ startApp()
 
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
-  // await importSourceCode()
-
+  await importSourceCode()
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
   let finalBlock = await mysql.lastBlockIndexed()
@@ -177,7 +176,7 @@ async function latestBlock () {
 }
 
 function getBlockPages (data) {
-  var re = new RegExp('A total of(.*?)transaction', 'i')
+  var re = new RegExp('total of(.*?)transactions', 'i')
   let total = data.match(re)[1]
   if (total) {
     return parseInt(total.trim())
@@ -209,7 +208,7 @@ async function importSourceCode (repeat = false) {
         } else {
           // start the import process in blockscout- then update the DB when successful
           console.log('Contract ' + importAddress + ' not verified on BlockScout, verifying...')
-          let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract)
+          let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract).catch(err => { console.log(err) })
           if (blockscoutImport === true) {
             console.log(colors.green(importAddress + ' has been successfully verified on BlockScout'))
             mysql.updateAddresses(importAddress, 1, 1, 1, 0)

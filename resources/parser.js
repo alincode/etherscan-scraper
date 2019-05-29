@@ -51,10 +51,12 @@ function parseVerifiedContract (data) {
   if (data.indexOf('Constructor Arguments') > -1) {
     contractObject.constructorArguments = parseConstructorArguments($('#dividcode > div:nth-child(4) > pre').text())
   } else {
+    /*
     let checkBytecode = parseConstructorFromBytecode(contractObject.bytecode)
     if (checkBytecode) {
       contractObject.constructorArguments = checkBytecode
     }
+    */
   }
   if (data.indexOf('Constructor Arguments') > -1 && data.indexOf('Library Used') > -1) {
     contractObject.libraries = parseLibraries($('#dividcode > div:nth-child(5) > pre').html())
