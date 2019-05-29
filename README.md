@@ -1,9 +1,9 @@
-# Verified Contract Stats
+# Etherscan Contract Scraper
+
+## Verified Contract Stats
 | Verified      | Failed    | Total Contracts Checked  |
 | ------------- |:---------:| ------------------------:|
-| 40,502        | 17,058    | 142,758                  |
-
-# Etherscan Contract Scraper
+| 43,332        | 16,288    | 166,272                  |
 
 ## Project Goals
 The goal of this project is to scrape verified contracts from Etherscan.io and import them onto Blockscout.com. Without the ability to scrape more than 1,000 records from the verified smart contracts page (https://etherscan.io/contractsVerified) on Etherscan, we need to check every contract address from every block. 
