@@ -18,10 +18,15 @@ startApp()
 async function startApp () {
   // before looking for new addresses we check for existing verified contracts
   await importSourceCode()
+
+  // get current block number
   let currentBlock = await latestBlock()
   console.log('Current Block Number on Mainnet: ', currentBlock)
+
+  // get last block indexed on Ethereum
   let finalBlock = await mysql.lastBlockIndexed()
   console.log('Last Block Indexed from DB: ', finalBlock)
+
   // check startBlock
   await mysql.checkStartBlock(startBlock)
   console.log('Checking to see if the start block is indexed...')
@@ -29,7 +34,7 @@ async function startApp () {
   if (finalBlock === 0) {
     console.log('No blocks found indexed in DB')
   } else {
-    // check gaps
+    // check and insert block gaps
     let blockGaps = await mysql.blockGaps()
     console.log(blockGaps)
     console.log('Checking block gaps...')
@@ -44,15 +49,21 @@ async function startApp () {
     }
   }
   // loop through verified contracts page
+
   for (let y = start; y <= verfiedContractPageEnd; y++) {
     scrapeVerifiedContracts(y)
     await sleep(1500)
   }
 
+  // import the source code into mysql
+  checkSourceCodeImport()
+
   // check Transaction page every minute
   checkNewBlocks()
+
   // check verified contract page every minute
   checkVerifiedContractsPage(1)
+
   // check pending addresses for verified accounts
   importSourceCode(true)
 }
@@ -211,10 +222,10 @@ async function importSourceCode (repeat = false) {
           let blockscoutImport = await blockscout.puppetVerify(importAddress, verifiedContract).catch(err => { console.log(err) })
           if (blockscoutImport === true) {
             console.log(colors.green(importAddress + ' has been successfully verified on BlockScout'))
-            mysql.updateAddresses(importAddress, 1, 1, 1, 0)
+            mysql.updateAddresses(importAddress, 1, 1, 1, 0, verifiedContract.contractName, verifiedContract.compilerVersion, verifiedContract.optimization, verifiedContract.runs, verifiedContract.evmVersion, verifiedContract.sourceCode, verifiedContract.bytecode, verifiedContract.constructorArguments, verifiedContract.libraries)
           } else {
             console.log(colors.red(importAddress + ' failed to be verified on BlockScout'))
-            mysql.updateAddresses(importAddress, 0, 0, 1, 1)
+            mysql.updateAddresses(importAddress, 0, 0, 1, 1, verifiedContract.contractName, verifiedContract.compilerVersion, verifiedContract.optimization, verifiedContract.runs, verifiedContract.evmVersion, verifiedContract.sourceCode, verifiedContract.bytecode, verifiedContract.constructorArguments, verifiedContract.libraries)
           }
         }
       } else {
@@ -231,4 +242,23 @@ async function importSourceCode (repeat = false) {
     console.log(colors.blue('Rechecking address list backlog...'))
     importSourceCode(true)
   }
+}
+
+async function checkSourceCodeImport () {
+  let addressArray = await mysql.sourceCodeAddresses()
+  if (addressArray) {
+    let address = addressArray[0].address
+    let blockscout = addressArray[0].blockscout
+    let verified = addressArray[0].verified
+    let checked = addressArray[0].checked
+    let failed = addressArray[0].failed
+    let etherscanCodeURL = 'https://etherscan.io/address/' + address + '#code'
+    let verifiedContract = await parser.parsePage(etherscanCodeURL)
+    if (verifiedContract) {
+      console.log(colors.cyan(address + ' source code fetched and imported...'))
+      await mysql.updateAddresses(address, blockscout, verified, checked, failed, verifiedContract.contractName, verifiedContract.compilerVersion, verifiedContract.optimization, verifiedContract.runs, verifiedContract.evmVersion, verifiedContract.sourceCode, verifiedContract.bytecode, verifiedContract.constructorArguments, verifiedContract.libraries)
+    }
+    await sleep(1000)
+  }
+  checkSourceCodeImport()
 }
