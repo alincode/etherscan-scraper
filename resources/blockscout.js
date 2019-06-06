@@ -73,7 +73,7 @@ let self = module.exports = {
         document.querySelector('.card-body button[type=submit]').click()
       })
       // await page.screenshot({ path: 'images/before-' + address + '.png', fullPage: true })
-      await page.waitForSelector('.navbar-brand')
+      await page.waitForSelector('.navbar-brand').catch(err => { console.log(err) })
       // await page.screenshot({ path: 'images/done-' + address + '-' + compiler + '.png', fullPage: true })
       await browser.close()
 

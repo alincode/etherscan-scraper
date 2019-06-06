@@ -22,6 +22,17 @@ let self = module.exports = {
     )
     return results
   },
+  sourceCodeAddresses: async () => {
+    let results = await new Promise((resolve, reject) => {
+      connection.query('SELECT * FROM addresses WHERE (blockscout = ? AND contractName IS NULL) OR (failed = ? AND contractName IS NULL) LIMIT 1', [1, 1], (err, res) => {
+        if (err) {
+          console.log(err)
+        }
+        resolve(res)
+      })
+    })
+    return results
+  },
   lastBlockIndexed: async () => {
     let results = await new Promise((resolve, reject) =>
       connection.query('SELECT * FROM blocks ORDER BY block DESC LIMIT 1', (err, res) => {
@@ -52,7 +63,7 @@ let self = module.exports = {
   },
   checkAddresses: async () => {
     let results = await new Promise((resolve, reject) =>
-      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? AND id > ? ORDER BY id ASC LIMIT 1000', [0, 0, 0], (err, res) => {
+      connection.query('SELECT * FROM addresses WHERE checked = ? AND blockscout = ? AND id > ? ORDER BY id DESC LIMIT 1000', [0, 0, 0], (err, res) => {
         if (err) {
           reject(err)
         } else {
@@ -62,9 +73,12 @@ let self = module.exports = {
     )
     return results
   },
-  updateAddresses: async (address, blockscout, verified, checked, failed) => {
+  updateAddresses: async (address, blockscout, verified, checked, failed, contractName = null, compilerVersion = null, optimization = null, runs = null, evmVersion = null, sourceCode = null, bytecode = null, constructorArguments = null, libraries = null) => {
+    if (libraries) {
+      libraries = 1
+    }
     let results = await new Promise((resolve, reject) =>
-      connection.query('UPDATE addresses SET blockscout = ?, verified = ?, checked = ?, failed = ? WHERE address = ?', [blockscout, verified, checked, failed, address], (err) => {
+      connection.query('UPDATE addresses SET blockscout = ?, verified = ?, checked = ?, failed = ?, contractName = ?, compilerVersion = ?, optimization = ?, runs = ?, evmVersion = ?, sourceCode = ?, bytecode = ?, constructorArguments = ?, libraries = ? WHERE address = ?', [blockscout, verified, checked, failed, contractName, compilerVersion, optimization, runs, evmVersion, sourceCode, bytecode, constructorArguments, libraries, address], (err) => {
         if (err) {
           reject(err)
         } else {
