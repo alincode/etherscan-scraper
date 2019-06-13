@@ -1,10 +1,10 @@
 const mysql = require('mysql')
 
 var connection = mysql.createConnection({
-  host: 'etherscan.cdl6z46qyrxn.us-east-1.rds.amazonaws.com',
-  user: 'blockscout',
-  password: 'Abelance9',
-  database: 'etherscan_contracts'
+  host: process.env.HOST,
+  user: process.env.USER,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE
 })
 
 connection.connect()
