@@ -70,7 +70,7 @@ let self = module.exports = {
       }
       await page.screenshot({ path: 'images/form-' + address + '-' + compiler + '.png', fullPage: true })
       await page.evaluate(() => {
-        document.querySelector('.card-body button[type=submit]').click()
+        document.querySelector('div.smart-contract-form-buttons > button:nth-child(2)').click()
       })
       // await page.screenshot({ path: 'images/before-' + address + '.png', fullPage: true })
       await page.waitForSelector('.navbar-brand').catch(err => { console.log(err) })
