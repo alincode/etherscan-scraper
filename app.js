@@ -5,6 +5,9 @@ const proxy = require('./resources/proxies')
 const blockscout = require('./resources/blockscout')
 const colors = require('colors')
 const cheerio = require('cheerio')
+const sha1 = require('sha1')
+const mkdirs = require('mk-dirs')
+const writeFile = require('write')
 const blockURL = 'https://etherscan.io/txs?block='
 const verifiedContractPage = 'https://etherscan.io/contractsVerified/'
 const start = 1
@@ -194,6 +197,12 @@ function getBlockPages (data) {
   }
 }
 
+async function saveContractInFileSystem (verifiedContract) {
+  const folderName = sha1(verifiedContract.sourceCode)
+  await mkdirs(`${folderName}/contract`)
+  await writeFile(`${folderName}/source.sol`, verifiedContract.sourceCode)
+}
+
 async function importSourceCode (repeat = false) {
   let addresses = await mysql.checkAddresses()
   if (addresses.length > 0) {
@@ -257,6 +266,7 @@ async function checkSourceCodeImport () {
     if (verifiedContract) {
       console.log(colors.cyan(address + ' source code fetched and imported...'))
       await mysql.updateAddresses(address, blockscout, verified, checked, failed, verifiedContract.contractName, verifiedContract.compilerVersion, verifiedContract.optimization, verifiedContract.runs, verifiedContract.evmVersion, verifiedContract.sourceCode, verifiedContract.bytecode, verifiedContract.constructorArguments, verifiedContract.libraries)
+      await saveContractInFileSystem(verifiedContract)
     }
     await sleep(1000)
   }
